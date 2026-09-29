@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            color-scheme: light;
+        }
+
+        body {
+            margin: 0;
+            font: 14px system-ui, sans-serif;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+    <title>すぐたん | すぐに学べるブラウザ英単語クイズ</title>
+    <meta name="description" content="すぐたんは、ブラウザですぐに始められる英単語クイズアプリ。インストール不要・登録不要で、ランダムに出題される英単語を4択形式でサクサク学習できます。">
+    <link rel="canonical" href="https://sugutan.vercel.app/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="すぐたん | すぐに学べるブラウザ英単語クイズ">
+    <meta property="og:description" content="ブラウザですぐに始められる英単語クイズ「すぐたん」。インストール不要・登録不要で、ランダム出題の4択英単語クイズを今すぐ体験。">
+    <meta property="og:url" content="https://sugutan.vercel.app/">
+    <meta property="og:locale" content="ja_JP">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="すぐたん | すぐに学べるブラウザ英単語クイズ">
+    <meta name="twitter:description" content="ブラウザですぐに始められる英単語クイズ「すぐたん」。インストール不要・登録不要で今すぐ英単語学習。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&family=Zen+Maru+Gothic:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Layout: one narrow column. Header with score, a word card with a play button, four stacked choices, a fixed-height feedback area. */
+        :root {
+            --bg: #EDF2F5;
+            --surface: #FFFFFF;
+            --ink: #14232B;
+            --muted: #5B6C76;
+            --line: #CFDAE1;
+            --accent: #0F6E7A;
+            --accent-ink: #FFFFFF;
+            --accent-soft: #DCEEF1;
+            --good: #1E8A4C;
+            --good-bg: #DDF3E6;
+            --bad: #C2413A;
+            --bad-bg: #FBE3E0;
+            --en: "Lexend", "Helvetica Neue", Arial, sans-serif;
+            --jp: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #0E171C;
+                --surface: #16232A;
+                --ink: #E6EEF2;
+                --muted: #93A5AF;
+                --line: #2A3B44;
+                --accent: #4FB8C6;
+                --accent-ink: #06222A;
+                --accent-soft: #123840;
+                --good: #5CCB8A;
+                --good-bg: #143A28;
+                --bad: #F08A82;
+                --bad-bg: #40201E;
+                color-scheme: dark;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0E171C;
+            --surface: #16232A;
+            --ink: #E6EEF2;
+            --muted: #93A5AF;
+            --line: #2A3B44;
+            --accent: #4FB8C6;
+            --accent-ink: #06222A;
+            --accent-soft: #123840;
+            --good: #5CCB8A;
+            --good-bg: #143A28;
+            --bad: #F08A82;
+            --bad-bg: #40201E;
+            color-scheme: dark;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: var(--jp);
+            padding-inline: 16px;
+            padding-block: 20px 32px;
+        }
+
+        .app {
+            max-width: 460px;
+            margin-inline: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        :focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .top {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand {
+            font-family: var(--jp);
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            color: var(--accent);
+        }
+
+        .score {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--ink);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .score span {
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 28px 20px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .word {
+            font-family: var(--en);
+            font-weight: 600;
+            font-size: clamp(2.4rem, 12vw, 3.5rem);
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+            overflow-wrap: anywhere;
+            min-width: 0;
+        }
+
+        .play {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 0;
+            background: var(--accent);
+            color: var(--accent-ink);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+
+        .play:active {
+            transform: scale(0.96);
+        }
+
+        .play svg {
+            width: 26px;
+            height: 26px;
+            fill: currentColor;
+        }
+
+        .hint {
+            font-size: 0.85rem;
+            color: var(--muted);
+            min-height: 1.2em;
+        }
+
+        .intro-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-wrap: balance;
+        }
+
+        .intro-text {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--muted);
+            max-width: 30ch;
+        }
+
+        .primary {
+            font-size: 1.1rem;
+            font-weight: 700;
+            min-height: 52px;
+            padding-inline: 32px;
+            border: 0;
+            border-radius: 12px;
+            background: var(--accent);
+            color: var(--accent-ink);
+            cursor: pointer;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .choice {
+            font-size: 1.1rem;
+            font-weight: 500;
+            min-height: 56px;
+            padding: 12px 16px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--surface);
+            color: var(--ink);
+            border: 1.5px solid var(--line);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: border-color 0.12s, background-color 0.12s, opacity 0.12s;
+        }
+
+        .choice:hover:not(:disabled) {
+            border-color: var(--accent);
+        }
+
+        .choice:disabled {
+            cursor: default;
+            color: var(--ink);
+        }
+
+        .choice.is-correct {
+            background: var(--good-bg);
+            border-color: var(--good);
+        }
+
+        .choice.is-correct::after {
+            content: "\2713";
+            color: var(--good);
+            font-weight: 700;
+        }
+
+        .choice.is-wrong {
+            background: var(--bad-bg);
+            border-color: var(--bad);
+        }
+
+        .choice.is-wrong::after {
+            content: "\00D7";
+            color: var(--bad);
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .choice.is-dim {
+            opacity: 0.5;
+        }
+
+        .feedback {
+            min-height: 108px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 28px;
+            min-width: 0;
+        }
+
+        .badge {
+            flex: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+
+        .badge.good {
+            background: var(--good-bg);
+            color: var(--good);
+        }
+
+        .badge.bad {
+            background: var(--bad-bg);
+            color: var(--bad);
+        }
+
+        .status-text {
+            font-size: 1rem;
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .status-text b {
+            font-family: var(--en);
+            font-weight: 600;
+        }
+
+        .next {
+            visibility: hidden;
+        }
+
+        .next.show {
+            visibility: visible;
+        }
+
+        .foot {
+            display: flex;
+            justify-content: center;
+        }
+
+        .link {
+            background: none;
+            border: 0;
+            color: var(--muted);
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .keeprow {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .ghost {
+            font-size: 0.95rem;
+            font-weight: 700;
+            min-height: 44px;
+            padding: 8px 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            color: var(--ink);
+            border: 1.5px solid var(--line);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .ghost:hover {
+            border-color: var(--accent);
+        }
+
+        .ghost svg {
+            width: 18px;
+            height: 18px;
+            flex: none;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linejoin: round;
+        }
+
+        .ghost[aria-pressed="true"] {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .ghost[aria-pressed="true"] svg {
+            fill: currentColor;
+        }
+
+        .count {
+            min-width: 1.6em;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 0.85rem;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .list-card {
+            align-items: stretch;
+            text-align: left;
+            padding: 16px;
+            gap: 8px;
+        }
+
+        .list-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .list-head h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .klist {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kitem {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 0;
+            border-top: 1px solid var(--line);
+        }
+
+        .kword {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .kword b {
+            font-family: var(--en);
+            font-weight: 600;
+            font-size: 1.25rem;
+            overflow-wrap: anywhere;
+        }
+
+        .kword span {
+            color: var(--muted);
+            font-size: 0.95rem;
+            overflow-wrap: anywhere;
+        }
+
+        .kact {
+            display: flex;
+            gap: 8px;
+            flex: none;
+        }
+
+        .mini {
+            min-width: 44px;
+            min-height: 44px;
+            padding: 0 12px;
+            display: inline-grid;
+            place-items: center;
+            background: transparent;
+            border: 1.5px solid var(--line);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .mini svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .mini.play {
+            color: var(--accent);
+            padding: 0;
+        }
+
+        .mini.del {
+            color: var(--bad);
+        }
+
+        .empty {
+            margin: 0;
+            padding: 16px 0 8px;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--muted);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .choice {
+                transition: none;
+            }
+
+            .play:active {
+                transform: none;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <main class="app">
+        <div class="top">
+            <div class="brand">すぐたん</div>
+            <div class="score" id="score" aria-live="polite">正解 <span>0 / 0問</span></div>
+        </div>
+
+        <section class="card" id="intro">
+            <div class="intro-title">すぐに学べる<br>ブラウザ英単語</div>
+            <p class="intro-text">1900語収録の英単語からランダムに出題します。日本語の意味を4つから選んでください。音が出ます。</p>
+            <button class="primary" id="startBtn" type="button">はじめる</button>
+        </section>
+
+        <div id="quiz" hidden>
+            <div class="app">
+                <section class="card">
+                    <div class="word" id="word" lang="en"></div>
+                    <button class="play" id="playBtn" type="button" aria-label="発音を聞く">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06a9 9 0 0 0 0-17.54z" />
+                        </svg>
+                    </button>
+                    <div class="hint" id="hint"></div>
+                    <div class="keeprow">
+                        <button class="ghost" id="keepBtn" type="button" aria-pressed="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />
+                            </svg>
+                            <span id="keepLabel">キープ</span>
+                        </button>
+                        <button class="ghost" id="listBtn" type="button">キープ一覧 <span class="count"
+                                id="keepCount">0</span></button>
+                    </div>
+                </section>
+
+                <div class="choices" id="choices"></div>
+
+                <div class="feedback" aria-live="polite">
+                    <div class="status" id="status"></div>
+                    <button class="primary next" id="nextBtn" type="button">次へ</button>
+                </div>
+            </div>
+        </div>
+
+        <section class="card list-card" id="keepView" hidden>
+            <div class="list-head">
+                <h2 id="keepTitle">キープ一覧</h2>
+                <button class="ghost" id="backBtn" type="button">もどる</button>
+            </div>
+            <ul class="klist" id="klist"></ul>
+            <p class="empty" id="kempty">まだありません。問題の画面で「キープ」を押すと、ここに集まります。</p>
+        </section>
+
+        <div class="foot"><button class="link" id="resetBtn" type="button" hidden>スコアを消して最初から</button></div>
+    </main>
+
+    <script src="words.js"></script>
+    <script>
+        (function () {
+            var $ = function (id) { return document.getElementById(id); };
+            var deck = [], pos = 0, current = null, currentLabel = "", answered = false, asked = 0, right = 0;
+
+            /* ---------- score (saved in this browser) ---------- */
+            var SCORE_KEY = "randomWords.score.v1";
+            (function () {
+                try {
+                    var raw = window.localStorage.getItem(SCORE_KEY);
+                    var obj = raw ? JSON.parse(raw) : null;
+                    if (obj && typeof obj.asked === "number" && typeof obj.right === "number") {
+                        asked = obj.asked; right = obj.right;
+                    }
+                } catch (e) { }
+            })();
+            function saveScore() {
+                try { window.localStorage.setItem(SCORE_KEY, JSON.stringify({ asked: asked, right: right })); } catch (e) { }
+            }
+
+            /* ---------- keep (saved in this browser) ---------- */
+            var KEY = "randomWords.kept.v1";
+            var SPEAKER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06a9 9 0 0 0 0-17.54z"/></svg>';
+            var JA = {};
+            WORDS.forEach(function (w) { JA[w[0]] = w[1]; });
+            var kept = [];
+            try {
+                var raw = window.localStorage.getItem(KEY);
+                var arr = raw ? JSON.parse(raw) : [];
+                if (Array.isArray(arr)) {
+                    kept = arr.filter(function (w) { return typeof w === "string" && Object.prototype.hasOwnProperty.call(JA, w); });
+                }
+            } catch (e) { kept = []; }
+
+            function saveKept() {
+                try { window.localStorage.setItem(KEY, JSON.stringify(kept)); } catch (e) { }
+            }
+            function isKept(en) { return kept.indexOf(en) !== -1; }
+
+            function renderList() {
+                var ul = $("klist");
+                ul.innerHTML = "";
+                $("kempty").hidden = kept.length > 0;
+                kept.forEach(function (en) {
+                    var li = document.createElement("li");
+                    li.className = "kitem";
+
+                    var word = document.createElement("div");
+                    word.className = "kword";
+                    var b = document.createElement("b");
+                    b.textContent = en;
+                    b.setAttribute("lang", "en");
+                    var s = document.createElement("span");
+                    s.textContent = JA[en];
+                    word.appendChild(b);
+                    word.appendChild(s);
+
+                    var act = document.createElement("div");
+                    act.className = "kact";
+                    var p = document.createElement("button");
+                    p.type = "button";
+                    p.className = "mini play";
+                    p.setAttribute("aria-label", en + " の発音を聞く");
+                    p.innerHTML = SPEAKER;
+                    p.addEventListener("click", function () { audio(); speak(en); });
+                    var d = document.createElement("button");
+                    d.type = "button";
+                    d.className = "mini del";
+                    d.setAttribute("aria-label", en + " をキープから削除");
+                    d.textContent = "削除";
+                    d.addEventListener("click", function () { removeKept(en); });
+                    act.appendChild(p);
+                    act.appendChild(d);
+
+                    li.appendChild(word);
+                    li.appendChild(act);
+                    ul.appendChild(li);
+                });
+            }
+
+            function renderKeep() {
+                var on = !!current && isKept(current[0]);
+                $("keepBtn").setAttribute("aria-pressed", on ? "true" : "false");
+                $("keepLabel").textContent = on ? "キープ済み" : "キープ";
+                $("keepCount").textContent = String(kept.length);
+                $("keepTitle").textContent = "キープ一覧(" + kept.length + "語)";
+                if (!$("keepView").hidden) renderList();
+            }
+
+            function toggleKeep() {
+                if (!current) return;
+                var i = kept.indexOf(current[0]);
+                if (i === -1) kept.unshift(current[0]);
+                else kept.splice(i, 1);
+                saveKept();
+                renderKeep();
+            }
+
+            function removeKept(en) {
+                var i = kept.indexOf(en);
+                if (i === -1) return;
+                kept.splice(i, 1);
+                saveKept();
+                renderKeep();
+                var next = $("klist").querySelector(".del");
+                (next || $("backBtn")).focus();
+            }
+
+            function showKeepView() {
+                if (hasSpeech) { try { window.speechSynthesis.cancel(); } catch (e) { } }
+                $("quiz").hidden = true;
+                $("resetBtn").hidden = true;
+                $("keepView").hidden = false;
+                renderKeep();
+                $("backBtn").focus();
+            }
+            function hideKeepView() {
+                $("keepView").hidden = true;
+                $("quiz").hidden = false;
+                $("resetBtn").hidden = false;
+                $("listBtn").focus();
+            }
+
+            function meaningLabel(ja) {
+                return ja.split("／")[0];
+            }
+
+            function shuffle(a) {
+                for (var i = a.length - 1; i > 0; i--) {
+                    var j = Math.floor(Math.random() * (i + 1));
+                    var t = a[i]; a[i] = a[j]; a[j] = t;
+                }
+                return a;
+            }
+
+            /* ---------- sound ---------- */
+            var ctx = null;
+            function audio() {
+                try {
+                    if (!ctx) {
+                        var AC = window.AudioContext || window.webkitAudioContext;
+                        if (AC) ctx = new AC();
+                    }
+                    if (ctx && ctx.state === "suspended") ctx.resume();
+                } catch (e) { ctx = null; }
+                return ctx;
+            }
+            function tone(c, freq, start, dur, type, vol) {
+                var o = c.createOscillator(), g = c.createGain();
+                o.type = type; o.frequency.value = freq;
+                var t0 = c.currentTime + start;
+                g.gain.setValueAtTime(0.0001, t0);
+                g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+                o.connect(g); g.connect(c.destination);
+                o.start(t0); o.stop(t0 + dur + 0.05);
+            }
+            function playCorrect() {
+                var c = audio(); if (!c) return;
+                tone(c, 1318.5, 0, 0.18, "sine", 0.3);
+                tone(c, 1046.5, 0.16, 0.45, "sine", 0.3);
+            }
+            function playWrong() {
+                var c = audio(); if (!c) return;
+                tone(c, 150, 0, 0.2, "square", 0.12);
+                tone(c, 150, 0.26, 0.32, "square", 0.12);
+            }
+
+            /* ---------- speech ---------- */
+            var hasSpeech = "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
+            var GOOD = /Google US English|Samantha|Ava|Allison|Susan|Zoe|Nicky|Aria|Jenny|Guy|Siri|Enhanced|Premium|Natural|Microsoft (Zira|David|Mark)/i;
+            var BAD = /Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Fred|Good News|Hysterical|Junior|Kathy|Organ|Pipe|Ralph|Superstar|Trinoids|Whisper|Wobble|Zarvox|Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley/i;
+            function pickVoice() {
+                var voices = window.speechSynthesis.getVoices() || [];
+                var best = null, bestScore = -1;
+                for (var i = 0; i < voices.length; i++) {
+                    var v = voices[i];
+                    var lang = (v.lang || "").replace("_", "-");
+                    if (lang.indexOf("en") !== 0) continue;
+                    if (BAD.test(v.name)) continue;
+                    var s = 1;
+                    if (lang === "en-US") s += 2;
+                    if (GOOD.test(v.name)) s += 3;
+                    if (v.localService === false && /Google/i.test(v.name)) s += 1;
+                    if (s > bestScore) { best = v; bestScore = s; }
+                }
+                return best;
+            }
+            function speak(text) {
+                if (!hasSpeech) return;
+                try {
+                    var synth = window.speechSynthesis;
+                    synth.cancel();
+                    var u = new SpeechSynthesisUtterance(text);
+                    u.lang = "en-US";
+                    u.rate = 1;
+                    u.pitch = 1;
+                    u.volume = 1;
+                    var v = pickVoice();
+                    if (v) { u.voice = v; u.lang = v.lang; }
+                    setTimeout(function () { synth.speak(u); }, 60);
+                } catch (e) { }
+            }
+
+            /* ---------- quiz ---------- */
+            function drawWord() {
+                if (pos >= deck.length) {
+                    deck = shuffle(WORDS.map(function (_, i) { return i; }));
+                    pos = 0;
+                }
+                return WORDS[deck[pos++]];
+            }
+
+            function updateScore() {
+                $("score").innerHTML = "正解 <span>" + right + " / " + asked + "問</span>";
+            }
+
+            function nextQuestion() {
+                answered = false;
+                current = drawWord();
+                currentLabel = meaningLabel(current[1]);
+                var others = shuffle(WORDS.filter(function (w) { return meaningLabel(w[1]) !== currentLabel; })).slice(0, 3);
+                var options = shuffle(others.concat([current]));
+
+                $("word").textContent = current[0];
+                $("status").innerHTML = "";
+                $("nextBtn").classList.remove("show");
+                renderKeep();
+
+                var box = $("choices");
+                box.innerHTML = "";
+                options.forEach(function (w, i) {
+                    var b = document.createElement("button");
+                    b.type = "button";
+                    b.className = "choice";
+                    b.textContent = meaningLabel(w[1]);
+                    b.setAttribute("data-ja", meaningLabel(w[1]));
+                    b.addEventListener("click", function () { choose(b); });
+                    box.appendChild(b);
+                });
+                speak(current[0]);
+            }
+
+            function choose(btn) {
+                if (answered) return;
+                answered = true;
+                asked++;
+                var ok = btn.getAttribute("data-ja") === currentLabel;
+                if (ok) right++;
+                if (hasSpeech) { try { window.speechSynthesis.cancel(); } catch (e) { } }
+                (ok ? playCorrect : playWrong)();
+
+                var list = $("choices").children;
+                for (var i = 0; i < list.length; i++) {
+                    var el = list[i];
+                    el.disabled = true;
+                    if (el.getAttribute("data-ja") === currentLabel) el.classList.add("is-correct");
+                    else if (el === btn) el.classList.add("is-wrong");
+                    else el.classList.add("is-dim");
+                }
+
+                var st = $("status");
+                st.innerHTML = "";
+                var badge = document.createElement("span");
+                badge.className = "badge " + (ok ? "good" : "bad");
+                badge.textContent = ok ? "正解" : "不正解";
+                var text = document.createElement("span");
+                text.className = "status-text";
+                var b = document.createElement("b");
+                b.textContent = current[0];
+                text.appendChild(b);
+                text.appendChild(document.createTextNode(" は「" + current[1] + "」"));
+                st.appendChild(badge);
+                st.appendChild(text);
+
+                updateScore();
+                saveScore();
+                var nb = $("nextBtn");
+                nb.classList.add("show");
+                nb.focus();
+            }
+
+            function start() {
+                audio();
+                $("intro").hidden = true;
+                $("quiz").hidden = false;
+                $("resetBtn").hidden = false;
+                nextQuestion();
+            }
+
+            function reset() {
+                asked = 0; right = 0;
+                deck = []; pos = 0;
+                updateScore();
+                saveScore();
+                nextQuestion();
+            }
+
+            $("startBtn").addEventListener("click", start);
+            $("nextBtn").addEventListener("click", function () { audio(); nextQuestion(); });
+            $("playBtn").addEventListener("click", function () { audio(); if (current) speak(current[0]); });
+            $("resetBtn").addEventListener("click", reset);
+            $("keepBtn").addEventListener("click", toggleKeep);
+            $("listBtn").addEventListener("click", showKeepView);
+            $("backBtn").addEventListener("click", hideKeepView);
+
+            document.addEventListener("keydown", function (e) {
+                if (!$("keepView").hidden) {
+                    if (e.key === "Escape") hideKeepView();
+                    return;
+                }
+                if ($("quiz").hidden) return;
+                if (!answered && e.key >= "1" && e.key <= "4") {
+                    var b = $("choices").children[Number(e.key) - 1];
+                    if (b) choose(b);
+                } else if (answered && (e.key === "Enter" || e.key === " ") && e.target === document.body) {
+                    e.preventDefault();
+                    nextQuestion();
+                }
+            });
+
+            renderKeep();
+            updateScore();
+            if (!hasSpeech) {
+                $("hint").textContent = "このブラウザでは音声読み上げが使えません";
+            }
+            if (hasSpeech) {
+                try { window.speechSynthesis.getVoices(); } catch (e) { }
+            }
+        })();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>すぐせか | すぐに学べる世界史</title>
+    <meta name="description" content="すぐせかは、ブラウザですぐに始められる世界史カードアプリ。インストール不要・登録不要で、ランダムに出てくる365枚の世界史カードをタップでめくって読めます。">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="すぐせか | すぐに学べる世界史">
+    <meta property="og:description" content="ブラウザですぐに始められる世界史カード「すぐせか」。インストール不要・登録不要で、タップでめくって世界史を学べます。">
+    <meta property="og:locale" content="ja_JP">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="すぐせか | すぐに学べる世界史">
+    <meta name="twitter:description" content="ブラウザですぐに始められる世界史カード「すぐせか」。インストール不要・登録不要で今すぐ世界史学習。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Layout: one narrow column. Header with progress, one large flip card (title on front, text on back), keep buttons below. */
+        :root {
+            color-scheme: light;
+            --bg: #F3EFE8;
+            --surface: #FFFDF9;
+            --ink: #2A2320;
+            --muted: #6E625A;
+            --line: #DDD3C6;
+            --accent: #9A4A24;
+            --accent-ink: #FFFFFF;
+            --accent-soft: #F3E1D6;
+            --bad: #B83A32;
+            --jp: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #171311;
+                --surface: #221C19;
+                --ink: #EFE8E2;
+                --muted: #A99C92;
+                --line: #3A302B;
+                --accent: #E4976D;
+                --accent-ink: #2A140A;
+                --accent-soft: #43281B;
+                --bad: #F08A82;
+                color-scheme: dark;
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #171311;
+            --surface: #221C19;
+            --ink: #EFE8E2;
+            --muted: #A99C92;
+            --line: #3A302B;
+            --accent: #E4976D;
+            --accent-ink: #2A140A;
+            --accent-soft: #43281B;
+            --bad: #F08A82;
+            color-scheme: dark;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 14px var(--jp);
+            padding-inline: 16px;
+            padding-block: 20px 32px;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .app {
+            max-width: 520px;
+            margin-inline: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        :focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .top {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .progress {
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress span {
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 32px 20px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .intro-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.5;
+            text-wrap: balance;
+        }
+
+        .intro-text {
+            margin: 0;
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--muted);
+            max-width: 30ch;
+        }
+
+        .primary {
+            font-size: 1.1rem;
+            font-weight: 700;
+            min-height: 52px;
+            padding-inline: 32px;
+            border: 0;
+            border-radius: 12px;
+            background: var(--accent);
+            color: var(--accent-ink);
+            cursor: pointer;
+        }
+
+        /* ---------- flip card ---------- */
+        .scene {
+            perspective: 1400px;
+        }
+
+        .card {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            width: 100%;
+            min-height: min(68vh, 560px);
+            padding: 0;
+            border: 0;
+            background: none;
+            color: inherit;
+            text-align: left;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.3, 0.7, 0.3, 1);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .face {
+            grid-area: 1 / 1;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            min-width: 0;
+        }
+
+        .front {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 20px;
+        }
+
+        .back {
+            transform: rotateY(180deg);
+            gap: 16px;
+        }
+
+        .label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .title {
+            font-size: clamp(1.7rem, 7.5vw, 2.3rem);
+            font-weight: 700;
+            line-height: 1.45;
+            text-wrap: balance;
+            overflow-wrap: anywhere;
+        }
+
+        .tap {
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .back-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            line-height: 1.5;
+            color: var(--accent);
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+            overflow-wrap: anywhere;
+        }
+
+        .body {
+            margin: 0;
+            font-size: clamp(1.08rem, 4.4vw, 1.22rem);
+            font-weight: 500;
+            line-height: 2;
+            letter-spacing: 0.02em;
+            overflow-wrap: anywhere;
+            flex: 1;
+        }
+
+        .back .tap {
+            text-align: center;
+        }
+
+        /* ---------- keep ---------- */
+        .keeprow {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .ghost {
+            font-size: 0.95rem;
+            font-weight: 700;
+            min-height: 44px;
+            padding: 8px 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            color: var(--ink);
+            border: 1.5px solid var(--line);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .ghost:hover {
+            border-color: var(--accent);
+        }
+
+        .ghost svg {
+            width: 18px;
+            height: 18px;
+            flex: none;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linejoin: round;
+        }
+
+        .ghost[aria-pressed="true"] {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .ghost[aria-pressed="true"] svg {
+            fill: currentColor;
+        }
+
+        .count {
+            min-width: 1.6em;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 0.85rem;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .list-panel {
+            align-items: stretch;
+            text-align: left;
+            padding: 16px;
+            gap: 8px;
+        }
+
+        .list-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .list-head h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .klist {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kitem {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 0;
+            border-top: 1px solid var(--line);
+        }
+
+        .kopen {
+            flex: 1;
+            min-width: 0;
+            min-height: 44px;
+            padding: 4px 0;
+            background: none;
+            border: 0;
+            color: var(--ink);
+            font-size: 1.05rem;
+            font-weight: 700;
+            line-height: 1.5;
+            text-align: left;
+            overflow-wrap: anywhere;
+            cursor: pointer;
+        }
+
+        .kopen:hover {
+            color: var(--accent);
+        }
+
+        .mini {
+            flex: none;
+            min-width: 44px;
+            min-height: 44px;
+            padding: 0 12px;
+            background: transparent;
+            border: 1.5px solid var(--line);
+            border-radius: 10px;
+            color: var(--bad);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .empty {
+            margin: 0;
+            padding: 16px 0 8px;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--muted);
+        }
+
+        .foot {
+            display: flex;
+            justify-content: center;
+        }
+
+        .link {
+            background: none;
+            border: 0;
+            color: var(--muted);
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .card {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="app">
+        <div class="top">
+            <div class="brand">すぐせか</div>
+            <div class="progress" id="progress" aria-live="polite">読んだ <span>0 / 0枚</span></div>
+        </div>
+
+        <section class="panel" id="intro">
+            <div class="intro-title">すぐに学べる<br>世界史</div>
+            <p class="intro-text">365枚の世界史カードがランダムに出てきます。タップでめくって、1枚200字で読めます。</p>
+            <button class="primary" id="startBtn" type="button">はじめる</button>
+        </section>
+
+        <div id="reader" class="app" hidden>
+            <div class="scene">
+                <button class="card" id="card" type="button" aria-live="polite">
+                    <div class="face front" id="front">
+                        <div class="label" id="frontLabel"></div>
+                        <div class="title" id="frontTitle"></div>
+                        <div class="tap">タップして読む</div>
+                    </div>
+                    <div class="face back" id="back" aria-hidden="true">
+                        <div class="back-title" id="backTitle"></div>
+                        <p class="body" id="backBody"></p>
+                        <div class="tap">タップで次のカードへ</div>
+                    </div>
+                </button>
+            </div>
+
+            <div class="keeprow">
+                <button class="ghost" id="keepBtn" type="button" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />
+                    </svg>
+                    <span id="keepLabel">キープ</span>
+                </button>
+                <button class="ghost" id="listBtn" type="button">キープ一覧 <span class="count" id="keepCount">0</span></button>
+            </div>
+        </div>
+
+        <section class="panel list-panel" id="keepView" hidden>
+            <div class="list-head">
+                <h2 id="keepTitle">キープ一覧</h2>
+                <button class="ghost" id="backBtn" type="button">もどる</button>
+            </div>
+            <ul class="klist" id="klist"></ul>
+            <p class="empty" id="kempty">まだありません。カードの下の「キープ」を押すと、ここに集まります。</p>
+        </section>
+
+        <div class="foot"><button class="link" id="resetBtn" type="button" hidden>読んだ記録を消して最初から</button></div>
+    </main>
+
+    <script src="cards.js"></script>
+    <script>
+        (function () {
+            var $ = function (id) { return document.getElementById(id); };
+            var deck = [], pos = 0, current = -1, flipped = false, angle = 0, busy = false;
+            var FLIP_MS = 500;
+
+            /* ---------- read log (saved in this browser) ---------- */
+            var READ_KEY = "suguseka.read.v1";
+            var read = {};
+            try {
+                var rawRead = window.localStorage.getItem(READ_KEY);
+                var arrRead = rawRead ? JSON.parse(rawRead) : [];
+                if (Array.isArray(arrRead)) {
+                    arrRead.forEach(function (t) { if (typeof t === "string") read[t] = true; });
+                }
+            } catch (e) { }
+            function saveRead() {
+                try { window.localStorage.setItem(READ_KEY, JSON.stringify(Object.keys(read))); } catch (e) { }
+            }
+            function updateProgress() {
+                var n = CARDS.filter(function (c) { return read[c.title]; }).length;
+                $("progress").innerHTML = "読んだ <span>" + n + " / " + CARDS.length + "枚</span>";
+            }
+
+            /* ---------- keep (saved in this browser) ---------- */
+            var KEY = "suguseka.kept.v1";
+            var INDEX = {};
+            CARDS.forEach(function (c, i) { INDEX[c.title] = i; });
+            var kept = [];
+            try {
+                var raw = window.localStorage.getItem(KEY);
+                var arr = raw ? JSON.parse(raw) : [];
+                if (Array.isArray(arr)) {
+                    kept = arr.filter(function (t) { return typeof t === "string" && Object.prototype.hasOwnProperty.call(INDEX, t); });
+                }
+            } catch (e) { kept = []; }
+
+            function saveKept() {
+                try { window.localStorage.setItem(KEY, JSON.stringify(kept)); } catch (e) { }
+            }
+            function isKept(title) { return kept.indexOf(title) !== -1; }
+
+            function renderList() {
+                var ul = $("klist");
+                ul.innerHTML = "";
+                $("kempty").hidden = kept.length > 0;
+                kept.forEach(function (title) {
+                    var li = document.createElement("li");
+                    li.className = "kitem";
+
+                    var open = document.createElement("button");
+                    open.type = "button";
+                    open.className = "kopen";
+                    open.textContent = title;
+                    open.addEventListener("click", function () { openCard(INDEX[title]); });
+
+                    var d = document.createElement("button");
+                    d.type = "button";
+                    d.className = "mini";
+                    d.setAttribute("aria-label", title + " をキープから削除");
+                    d.textContent = "削除";
+                    d.addEventListener("click", function () { removeKept(title); });
+
+                    li.appendChild(open);
+                    li.appendChild(d);
+                    ul.appendChild(li);
+                });
+            }
+
+            function renderKeep() {
+                var on = current !== -1 && isKept(CARDS[current].title);
+                $("keepBtn").setAttribute("aria-pressed", on ? "true" : "false");
+                $("keepLabel").textContent = on ? "キープ済み" : "キープ";
+                $("keepCount").textContent = String(kept.length);
+                $("keepTitle").textContent = "キープ一覧(" + kept.length + "枚)";
+                if (!$("keepView").hidden) renderList();
+            }
+
+            function toggleKeep() {
+                if (current === -1) return;
+                var title = CARDS[current].title;
+                var i = kept.indexOf(title);
+                if (i === -1) kept.unshift(title);
+                else kept.splice(i, 1);
+                saveKept();
+                renderKeep();
+            }
+
+            function removeKept(title) {
+                var i = kept.indexOf(title);
+                if (i === -1) return;
+                kept.splice(i, 1);
+                saveKept();
+                renderKeep();
+                var next = $("klist").querySelector(".mini");
+                (next || $("backBtn")).focus();
+            }
+
+            function showKeepView() {
+                $("reader").hidden = true;
+                $("resetBtn").hidden = true;
+                $("keepView").hidden = false;
+                renderKeep();
+                $("backBtn").focus();
+            }
+            function hideKeepView() {
+                $("keepView").hidden = true;
+                $("reader").hidden = false;
+                $("resetBtn").hidden = false;
+                $("listBtn").focus();
+            }
+
+            /* ---------- cards ---------- */
+            function shuffle(a) {
+                for (var i = a.length - 1; i > 0; i--) {
+                    var j = Math.floor(Math.random() * (i + 1));
+                    var t = a[i]; a[i] = a[j]; a[j] = t;
+                }
+                return a;
+            }
+
+            function drawCard() {
+                if (pos >= deck.length) {
+                    // 未読のカードを先に、読んだカードはその後に
+                    var unread = [], seen = [];
+                    CARDS.forEach(function (c, i) { (read[c.title] ? seen : unread).push(i); });
+                    deck = shuffle(unread).concat(shuffle(seen));
+                    pos = 0;
+                }
+                return deck[pos++];
+            }
+
+            function setFront(i) {
+                $("frontLabel").textContent = read[CARDS[i].title] ? "読んだカード" : "新しいカード";
+                $("frontTitle").textContent = CARDS[i].title;
+            }
+            function setBack(i) {
+                $("backTitle").textContent = CARDS[i].title;
+                $("backBody").textContent = CARDS[i].body;
+            }
+            function rotate() {
+                angle += 180;
+                $("card").style.transform = "rotateY(" + angle + "deg)";
+                $("front").setAttribute("aria-hidden", flipped ? "true" : "false");
+                $("back").setAttribute("aria-hidden", flipped ? "false" : "true");
+            }
+
+            function flipToBack() {
+                flipped = true;
+                read[CARDS[current].title] = true;
+                saveRead();
+                updateProgress();
+                rotate();
+            }
+
+            // 裏面を見せたまま次のカードの表面をセットし、回転後に裏面を差し替える
+            function nextCard(i) {
+                current = typeof i === "number" ? i : drawCard();
+                flipped = false;
+                setFront(current);
+                renderKeep();
+                rotate();
+                busy = true;
+                setTimeout(function () { setBack(current); busy = false; }, FLIP_MS);
+            }
+
+            function tapCard() {
+                if (busy) return;
+                if (!flipped) flipToBack();
+                else nextCard();
+            }
+
+            // キープ一覧から開いたカードは裏面（本文）を直接表示する
+            function openCard(i) {
+                current = i;
+                setFront(i);
+                setBack(i);
+                if (!flipped) flipToBack();
+                renderKeep();
+                hideKeepView();
+                $("card").focus();
+            }
+
+            function start() {
+                $("intro").hidden = true;
+                $("reader").hidden = false;
+                $("resetBtn").hidden = false;
+                current = drawCard();
+                setFront(current);
+                setBack(current);
+                renderKeep();
+                $("card").focus();
+            }
+
+            function reset() {
+                read = {};
+                saveRead();
+                updateProgress();
+                deck = []; pos = 0;
+                if (flipped) nextCard();
+                else { current = drawCard(); setFront(current); setBack(current); renderKeep(); }
+            }
+
+            $("startBtn").addEventListener("click", start);
+            $("card").addEventListener("click", tapCard);
+            $("resetBtn").addEventListener("click", reset);
+            $("keepBtn").addEventListener("click", toggleKeep);
+            $("listBtn").addEventListener("click", showKeepView);
+            $("backBtn").addEventListener("click", hideKeepView);
+
+            document.addEventListener("keydown", function (e) {
+                if (!$("keepView").hidden) {
+                    if (e.key === "Escape") hideKeepView();
+                    return;
+                }
+                if ($("reader").hidden) return;
+                if (e.key === "ArrowRight") tapCard();
+            });
+
+            renderKeep();
+            updateProgress();
+        })();
+    </script>
+</body>
+
+</html>
