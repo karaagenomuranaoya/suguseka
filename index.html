@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        /* Layout: one narrow column. Header with progress, one large flip card (title on front, text on back), keep buttons below. */
+        /* Layout: one narrow column. Header, one large flip card (title on front, text on back), keep buttons below. */
         :root {
             color-scheme: light;
             --bg: #F3EFE8;
@@ -101,17 +101,6 @@
             font-size: 1.1rem;
             font-weight: 700;
             color: var(--accent);
-        }
-
-        .progress {
-            font-size: 0.95rem;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .progress span {
-            color: var(--muted);
-            font-weight: 500;
         }
 
         .panel {
@@ -409,7 +398,6 @@
     <main class="app">
         <div class="top">
             <div class="brand">すぐせか</div>
-            <div class="progress" id="progress" aria-live="polite">読んだ <span>0 / 0枚</span></div>
         </div>
 
         <section class="panel" id="intro">
@@ -476,10 +464,6 @@
             } catch (e) { }
             function saveRead() {
                 try { window.localStorage.setItem(READ_KEY, JSON.stringify(Object.keys(read))); } catch (e) { }
-            }
-            function updateProgress() {
-                var n = CARDS.filter(function (c) { return read[c.title]; }).length;
-                $("progress").innerHTML = "読んだ <span>" + n + " / " + CARDS.length + "枚</span>";
             }
 
             /* ---------- keep (saved in this browser) ---------- */
@@ -609,7 +593,6 @@
                 flipped = true;
                 read[CARDS[current].title] = true;
                 saveRead();
-                updateProgress();
                 rotate();
             }
 
@@ -655,7 +638,6 @@
             function reset() {
                 read = {};
                 saveRead();
-                updateProgress();
                 deck = []; pos = 0;
                 if (flipped) nextCard();
                 else { current = drawCard(); setFront(current); setBack(current); renderKeep(); }
@@ -678,7 +660,6 @@
             });
 
             renderKeep();
-            updateProgress();
         })();
     </script>
 </body>
