@@ -4,20 +4,20 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>すぐせか | すぐに学べる世界史</title>
-    <meta name="description" content="すぐせかは、ブラウザですぐに始められる世界史カードアプリ。インストール不要・登録不要で、ランダムに出てくる365枚の世界史カードをタップでめくって読めます。">
+    <title>すぐせか | すぐに学べる世界史クイズ</title>
+    <meta name="description" content="すぐせかは、ブラウザですぐに始められる世界史クイズアプリ。インストール不要・登録不要で、ランダムに出題される世界史の重要語を4択で学び、解説で理解を深められます。">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="すぐせか | すぐに学べる世界史">
-    <meta property="og:description" content="ブラウザですぐに始められる世界史カード「すぐせか」。インストール不要・登録不要で、タップでめくって世界史を学べます。">
+    <meta property="og:title" content="すぐせか | すぐに学べる世界史クイズ">
+    <meta property="og:description" content="ブラウザですぐに始められる世界史クイズ「すぐせか」。インストール不要・登録不要で、4択問題と解説で世界史を学べます。">
     <meta property="og:locale" content="ja_JP">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="すぐせか | すぐに学べる世界史">
-    <meta name="twitter:description" content="ブラウザですぐに始められる世界史カード「すぐせか」。インストール不要・登録不要で今すぐ世界史学習。">
+    <meta name="twitter:title" content="すぐせか | すぐに学べる世界史クイズ">
+    <meta name="twitter:description" content="ブラウザですぐに始められる世界史クイズ「すぐせか」。インストール不要・登録不要で今すぐ世界史学習。">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        /* Layout: one narrow column. Header, one large flip card (title on front, text on back), keep buttons below. */
+        /* Layout: one narrow column. Header, a question card, four stacked choices, then result + explanation. */
         :root {
             color-scheme: light;
             --bg: #F3EFE8;
@@ -28,7 +28,10 @@
             --accent: #9A4A24;
             --accent-ink: #FFFFFF;
             --accent-soft: #F3E1D6;
+            --good: #1E8A4C;
+            --good-bg: #DDF3E6;
             --bad: #B83A32;
+            --bad-bg: #FBE3E0;
             --jp: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
         }
 
@@ -42,7 +45,10 @@
                 --accent: #E4976D;
                 --accent-ink: #2A140A;
                 --accent-soft: #43281B;
+                --good: #5CCB8A;
+                --good-bg: #143A28;
                 --bad: #F08A82;
+                --bad-bg: #40201E;
                 color-scheme: dark;
             }
         }
@@ -56,7 +62,10 @@
             --accent: #E4976D;
             --accent-ink: #2A140A;
             --accent-soft: #43281B;
+            --good: #5CCB8A;
+            --good-bg: #143A28;
             --bad: #F08A82;
+            --bad-bg: #40201E;
             color-scheme: dark;
         }
 
@@ -107,7 +116,7 @@
             background: var(--surface);
             border: 1px solid var(--line);
             border-radius: 20px;
-            padding: 32px 20px 28px;
+            padding: 28px 20px 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -142,95 +151,149 @@
             cursor: pointer;
         }
 
-        /* ---------- flip card ---------- */
-        .scene {
-            perspective: 1400px;
-        }
-
-        .card {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr);
-            width: 100%;
-            min-height: min(68vh, 560px);
-            padding: 0;
-            border: 0;
-            background: none;
-            color: inherit;
+        /* ---------- question ---------- */
+        .qcard {
+            align-items: stretch;
             text-align: left;
-            cursor: pointer;
-            transform-style: preserve-3d;
-            transition: transform 0.5s cubic-bezier(0.3, 0.7, 0.3, 1);
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .face {
-            grid-area: 1 / 1;
-            background: var(--surface);
-            border: 1px solid var(--line);
-            border-radius: 20px;
-            box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
-            padding: 32px 24px;
-            display: flex;
-            flex-direction: column;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            min-width: 0;
-        }
-
-        .front {
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            gap: 20px;
-        }
-
-        .back {
-            transform: rotateY(180deg);
             gap: 16px;
         }
 
-        .label {
+        .era {
+            align-self: flex-start;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .question {
+            margin: 0;
+            font-size: clamp(1.05rem, 4.4vw, 1.18rem);
+            font-weight: 500;
+            line-height: 1.9;
+            letter-spacing: 0.02em;
+            overflow-wrap: anywhere;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .choice {
+            font-size: 1.1rem;
+            font-weight: 700;
+            min-height: 56px;
+            padding: 12px 16px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--surface);
+            color: var(--ink);
+            border: 1.5px solid var(--line);
+            border-radius: 12px;
+            cursor: pointer;
+            overflow-wrap: anywhere;
+            transition: border-color 0.12s, background-color 0.12s, opacity 0.12s;
+        }
+
+        .choice:hover:not(:disabled) {
+            border-color: var(--accent);
+        }
+
+        .choice:disabled {
+            cursor: default;
+            color: var(--ink);
+        }
+
+        .choice.is-correct {
+            background: var(--good-bg);
+            border-color: var(--good);
+        }
+
+        .choice.is-correct::after {
+            content: "\2713";
+            color: var(--good);
+        }
+
+        .choice.is-wrong {
+            background: var(--bad-bg);
+            border-color: var(--bad);
+        }
+
+        .choice.is-wrong::after {
+            content: "\00D7";
+            color: var(--bad);
+            font-size: 1.3rem;
+        }
+
+        .choice.is-dim {
+            opacity: 0.5;
+        }
+
+        /* ---------- result + explanation ---------- */
+        .feedback {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .badge {
+            flex: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+
+        .badge.good {
+            background: var(--good-bg);
+            color: var(--good);
+        }
+
+        .badge.bad {
+            background: var(--bad-bg);
+            color: var(--bad);
+        }
+
+        .status-text {
+            font-size: 1rem;
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .explain {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--accent);
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        .explain-head {
             font-size: 0.85rem;
             font-weight: 700;
             color: var(--accent);
-            font-variant-numeric: tabular-nums;
+            margin-bottom: 6px;
         }
 
-        .title {
-            font-size: clamp(1.7rem, 7.5vw, 2.3rem);
-            font-weight: 700;
-            line-height: 1.45;
-            text-wrap: balance;
-            overflow-wrap: anywhere;
-        }
-
-        .tap {
-            font-size: 0.9rem;
-            color: var(--muted);
-        }
-
-        .back-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            line-height: 1.5;
-            color: var(--accent);
-            padding-bottom: 14px;
-            border-bottom: 1px solid var(--line);
-            overflow-wrap: anywhere;
-        }
-
-        .body {
+        .explain p {
             margin: 0;
-            font-size: clamp(1.08rem, 4.4vw, 1.22rem);
-            font-weight: 500;
-            line-height: 2;
-            letter-spacing: 0.02em;
+            font-size: 1rem;
+            line-height: 1.9;
             overflow-wrap: anywhere;
-            flex: 1;
-        }
-
-        .back .tap {
-            text-align: center;
         }
 
         /* ---------- keep ---------- */
@@ -321,31 +384,30 @@
 
         .kitem {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
             gap: 12px;
-            padding: 8px 0;
+            padding: 12px 0;
             border-top: 1px solid var(--line);
         }
 
-        .kopen {
-            flex: 1;
+        .kword {
             min-width: 0;
-            min-height: 44px;
-            padding: 4px 0;
-            background: none;
-            border: 0;
-            color: var(--ink);
-            font-size: 1.05rem;
-            font-weight: 700;
-            line-height: 1.5;
-            text-align: left;
-            overflow-wrap: anywhere;
-            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
-        .kopen:hover {
-            color: var(--accent);
+        .kword b {
+            font-size: 1.1rem;
+            overflow-wrap: anywhere;
+        }
+
+        .kword span {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
         }
 
         .mini {
@@ -370,24 +432,8 @@
             color: var(--muted);
         }
 
-        .foot {
-            display: flex;
-            justify-content: center;
-        }
-
-        .link {
-            background: none;
-            border: 0;
-            color: var(--muted);
-            font-size: 0.85rem;
-            padding: 8px 12px;
-            cursor: pointer;
-            text-decoration: underline;
-            text-underline-offset: 3px;
-        }
-
         @media (prefers-reduced-motion: reduce) {
-            .card {
+            .choice {
                 transition: none;
             }
         }
@@ -402,24 +448,25 @@
 
         <section class="panel" id="intro">
             <div class="intro-title">すぐに学べる<br>世界史</div>
-            <p class="intro-text">365枚の世界史カードがランダムに出てきます。タップでめくって、1枚200字で読めます。</p>
+            <p class="intro-text" id="introText">世界史の重要語からランダムに出題します。問題文を読んで、答えを4つから選んでください。</p>
             <button class="primary" id="startBtn" type="button">はじめる</button>
         </section>
 
-        <div id="reader" class="app" hidden>
-            <div class="scene">
-                <button class="card" id="card" type="button" aria-live="polite">
-                    <div class="face front" id="front">
-                        <div class="label" id="frontLabel"></div>
-                        <div class="title" id="frontTitle"></div>
-                        <div class="tap">タップして読む</div>
-                    </div>
-                    <div class="face back" id="back" aria-hidden="true">
-                        <div class="back-title" id="backTitle"></div>
-                        <p class="body" id="backBody"></p>
-                        <div class="tap">タップで次のカードへ</div>
-                    </div>
-                </button>
+        <div id="quiz" class="app" hidden>
+            <section class="panel qcard">
+                <span class="era" id="era"></span>
+                <p class="question" id="question"></p>
+            </section>
+
+            <div class="choices" id="choices"></div>
+
+            <div class="feedback" id="feedback" aria-live="polite" hidden>
+                <div class="status" id="status"></div>
+                <div class="explain">
+                    <div class="explain-head">解説</div>
+                    <p id="explain"></p>
+                </div>
+                <button class="primary" id="nextBtn" type="button">次へ</button>
             </div>
 
             <div class="keeprow">
@@ -439,99 +486,85 @@
                 <button class="ghost" id="backBtn" type="button">もどる</button>
             </div>
             <ul class="klist" id="klist"></ul>
-            <p class="empty" id="kempty">まだありません。カードの下の「キープ」を押すと、ここに集まります。</p>
+            <p class="empty" id="kempty">まだありません。問題の画面で「キープ」を押すと、ここに集まります。</p>
         </section>
-
-        <div class="foot"><button class="link" id="resetBtn" type="button" hidden>読んだ記録を消して最初から</button></div>
     </main>
 
-    <script src="cards.js"></script>
+    <script src="words.js"></script>
     <script>
         (function () {
             var $ = function (id) { return document.getElementById(id); };
-            var deck = [], pos = 0, current = -1, flipped = false, angle = 0, busy = false;
-            var FLIP_MS = 500;
+            var deck = [], pos = 0, current = null, answered = false;
 
-            /* ---------- read log (saved in this browser) ---------- */
-            var READ_KEY = "suguseka.read.v1";
-            var read = {};
-            try {
-                var rawRead = window.localStorage.getItem(READ_KEY);
-                var arrRead = rawRead ? JSON.parse(rawRead) : [];
-                if (Array.isArray(arrRead)) {
-                    arrRead.forEach(function (t) { if (typeof t === "string") read[t] = true; });
-                }
-            } catch (e) { }
-            function saveRead() {
-                try { window.localStorage.setItem(READ_KEY, JSON.stringify(Object.keys(read))); } catch (e) { }
-            }
-
-            /* ---------- keep (saved in this browser) ---------- */
-            var KEY = "suguseka.kept.v1";
-            var INDEX = {};
-            CARDS.forEach(function (c, i) { INDEX[c.title] = i; });
+            /* ---------- keep (saved in this browser, by word id) ---------- */
+            var KEY = "suguseka.keptWords.v1";
+            var BY_ID = {};
+            WORDS.forEach(function (w) { BY_ID[w.id] = w; });
             var kept = [];
             try {
                 var raw = window.localStorage.getItem(KEY);
                 var arr = raw ? JSON.parse(raw) : [];
                 if (Array.isArray(arr)) {
-                    kept = arr.filter(function (t) { return typeof t === "string" && Object.prototype.hasOwnProperty.call(INDEX, t); });
+                    kept = arr.filter(function (id) { return typeof id === "number" && Object.prototype.hasOwnProperty.call(BY_ID, id); });
                 }
             } catch (e) { kept = []; }
 
             function saveKept() {
                 try { window.localStorage.setItem(KEY, JSON.stringify(kept)); } catch (e) { }
             }
-            function isKept(title) { return kept.indexOf(title) !== -1; }
+            function isKept(id) { return kept.indexOf(id) !== -1; }
 
             function renderList() {
                 var ul = $("klist");
                 ul.innerHTML = "";
                 $("kempty").hidden = kept.length > 0;
-                kept.forEach(function (title) {
+                kept.forEach(function (id) {
+                    var w = BY_ID[id];
                     var li = document.createElement("li");
                     li.className = "kitem";
 
-                    var open = document.createElement("button");
-                    open.type = "button";
-                    open.className = "kopen";
-                    open.textContent = title;
-                    open.addEventListener("click", function () { openCard(INDEX[title]); });
+                    var word = document.createElement("div");
+                    word.className = "kword";
+                    var b = document.createElement("b");
+                    b.textContent = w.word;
+                    var s = document.createElement("span");
+                    s.textContent = w.explanation;
+                    word.appendChild(b);
+                    word.appendChild(s);
 
                     var d = document.createElement("button");
                     d.type = "button";
                     d.className = "mini";
-                    d.setAttribute("aria-label", title + " をキープから削除");
+                    d.setAttribute("aria-label", w.word + " をキープから削除");
                     d.textContent = "削除";
-                    d.addEventListener("click", function () { removeKept(title); });
+                    d.addEventListener("click", function () { removeKept(id); });
 
-                    li.appendChild(open);
+                    li.appendChild(word);
                     li.appendChild(d);
                     ul.appendChild(li);
                 });
             }
 
             function renderKeep() {
-                var on = current !== -1 && isKept(CARDS[current].title);
+                var on = !!current && isKept(current.id);
                 $("keepBtn").setAttribute("aria-pressed", on ? "true" : "false");
                 $("keepLabel").textContent = on ? "キープ済み" : "キープ";
                 $("keepCount").textContent = String(kept.length);
-                $("keepTitle").textContent = "キープ一覧(" + kept.length + "枚)";
+                $("keepTitle").textContent = "キープ一覧(" + kept.length + "語)";
                 if (!$("keepView").hidden) renderList();
             }
 
             function toggleKeep() {
-                if (current === -1) return;
-                var title = CARDS[current].title;
-                var i = kept.indexOf(title);
-                if (i === -1) kept.unshift(title);
+                if (!current) return;
+                var i = kept.indexOf(current.id);
+                if (i === -1) kept.unshift(current.id);
                 else kept.splice(i, 1);
                 saveKept();
                 renderKeep();
             }
 
-            function removeKept(title) {
-                var i = kept.indexOf(title);
+            function removeKept(id) {
+                var i = kept.indexOf(id);
                 if (i === -1) return;
                 kept.splice(i, 1);
                 saveKept();
@@ -541,20 +574,51 @@
             }
 
             function showKeepView() {
-                $("reader").hidden = true;
-                $("resetBtn").hidden = true;
+                $("quiz").hidden = true;
                 $("keepView").hidden = false;
                 renderKeep();
                 $("backBtn").focus();
             }
             function hideKeepView() {
                 $("keepView").hidden = true;
-                $("reader").hidden = false;
-                $("resetBtn").hidden = false;
+                $("quiz").hidden = false;
                 $("listBtn").focus();
             }
 
-            /* ---------- cards ---------- */
+            /* ---------- sound ---------- */
+            var ctx = null;
+            function audio() {
+                try {
+                    if (!ctx) {
+                        var AC = window.AudioContext || window.webkitAudioContext;
+                        if (AC) ctx = new AC();
+                    }
+                    if (ctx && ctx.state === "suspended") ctx.resume();
+                } catch (e) { ctx = null; }
+                return ctx;
+            }
+            function tone(c, freq, start, dur, type, vol) {
+                var o = c.createOscillator(), g = c.createGain();
+                o.type = type; o.frequency.value = freq;
+                var t0 = c.currentTime + start;
+                g.gain.setValueAtTime(0.0001, t0);
+                g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+                o.connect(g); g.connect(c.destination);
+                o.start(t0); o.stop(t0 + dur + 0.05);
+            }
+            function playCorrect() {
+                var c = audio(); if (!c) return;
+                tone(c, 1318.5, 0, 0.18, "sine", 0.3);
+                tone(c, 1046.5, 0.16, 0.45, "sine", 0.3);
+            }
+            function playWrong() {
+                var c = audio(); if (!c) return;
+                tone(c, 150, 0, 0.2, "square", 0.12);
+                tone(c, 150, 0.26, 0.32, "square", 0.12);
+            }
+
+            /* ---------- quiz ---------- */
             function shuffle(a) {
                 for (var i = a.length - 1; i > 0; i--) {
                     var j = Math.floor(Math.random() * (i + 1));
@@ -563,89 +627,77 @@
                 return a;
             }
 
-            function drawCard() {
+            function drawWord() {
                 if (pos >= deck.length) {
-                    // 未読のカードを先に、読んだカードはその後に
-                    var unread = [], seen = [];
-                    CARDS.forEach(function (c, i) { (read[c.title] ? seen : unread).push(i); });
-                    deck = shuffle(unread).concat(shuffle(seen));
+                    deck = shuffle(WORDS.map(function (_, i) { return i; }));
                     pos = 0;
                 }
-                return deck[pos++];
+                return WORDS[deck[pos++]];
             }
 
-            function setFront(i) {
-                $("frontLabel").textContent = read[CARDS[i].title] ? "読んだカード" : "新しいカード";
-                $("frontTitle").textContent = CARDS[i].title;
-            }
-            function setBack(i) {
-                $("backTitle").textContent = CARDS[i].title;
-                $("backBody").textContent = CARDS[i].body;
-            }
-            function rotate() {
-                angle += 180;
-                $("card").style.transform = "rotateY(" + angle + "deg)";
-                $("front").setAttribute("aria-hidden", flipped ? "true" : "false");
-                $("back").setAttribute("aria-hidden", flipped ? "false" : "true");
-            }
+            function nextQuestion() {
+                answered = false;
+                current = drawWord();
+                var options = shuffle([current.answer].concat(current.wrong));
 
-            function flipToBack() {
-                flipped = true;
-                read[CARDS[current].title] = true;
-                saveRead();
-                rotate();
-            }
-
-            // 裏面を見せたまま次のカードの表面をセットし、回転後に裏面を差し替える
-            function nextCard(i) {
-                current = typeof i === "number" ? i : drawCard();
-                flipped = false;
-                setFront(current);
+                $("era").textContent = current.era;
+                $("question").textContent = current.question;
+                $("feedback").hidden = true;
                 renderKeep();
-                rotate();
-                busy = true;
-                setTimeout(function () { setBack(current); busy = false; }, FLIP_MS);
+
+                var box = $("choices");
+                box.innerHTML = "";
+                options.forEach(function (label) {
+                    var b = document.createElement("button");
+                    b.type = "button";
+                    b.className = "choice";
+                    b.textContent = label;
+                    b.addEventListener("click", function () { choose(b); });
+                    box.appendChild(b);
+                });
+                window.scrollTo(0, 0);
             }
 
-            function tapCard() {
-                if (busy) return;
-                if (!flipped) flipToBack();
-                else nextCard();
-            }
+            function choose(btn) {
+                if (answered) return;
+                answered = true;
+                var ok = btn.textContent === current.answer;
+                (ok ? playCorrect : playWrong)();
 
-            // キープ一覧から開いたカードは裏面（本文）を直接表示する
-            function openCard(i) {
-                current = i;
-                setFront(i);
-                setBack(i);
-                if (!flipped) flipToBack();
-                renderKeep();
-                hideKeepView();
-                $("card").focus();
+                var list = $("choices").children;
+                for (var i = 0; i < list.length; i++) {
+                    var el = list[i];
+                    el.disabled = true;
+                    if (el.textContent === current.answer) el.classList.add("is-correct");
+                    else if (el === btn) el.classList.add("is-wrong");
+                    else el.classList.add("is-dim");
+                }
+
+                var st = $("status");
+                st.innerHTML = "";
+                var badge = document.createElement("span");
+                badge.className = "badge " + (ok ? "good" : "bad");
+                badge.textContent = ok ? "正解" : "不正解";
+                var text = document.createElement("span");
+                text.className = "status-text";
+                text.textContent = "答えは「" + current.answer + "」";
+                st.appendChild(badge);
+                st.appendChild(text);
+                $("explain").textContent = current.explanation;
+                $("feedback").hidden = false;
+
+                $("nextBtn").focus();
             }
 
             function start() {
+                audio();
                 $("intro").hidden = true;
-                $("reader").hidden = false;
-                $("resetBtn").hidden = false;
-                current = drawCard();
-                setFront(current);
-                setBack(current);
-                renderKeep();
-                $("card").focus();
-            }
-
-            function reset() {
-                read = {};
-                saveRead();
-                deck = []; pos = 0;
-                if (flipped) nextCard();
-                else { current = drawCard(); setFront(current); setBack(current); renderKeep(); }
+                $("quiz").hidden = false;
+                nextQuestion();
             }
 
             $("startBtn").addEventListener("click", start);
-            $("card").addEventListener("click", tapCard);
-            $("resetBtn").addEventListener("click", reset);
+            $("nextBtn").addEventListener("click", function () { audio(); nextQuestion(); });
             $("keepBtn").addEventListener("click", toggleKeep);
             $("listBtn").addEventListener("click", showKeepView);
             $("backBtn").addEventListener("click", hideKeepView);
@@ -655,10 +707,17 @@
                     if (e.key === "Escape") hideKeepView();
                     return;
                 }
-                if ($("reader").hidden) return;
-                if (e.key === "ArrowRight") tapCard();
+                if ($("quiz").hidden) return;
+                if (!answered && e.key >= "1" && e.key <= "4") {
+                    var b = $("choices").children[Number(e.key) - 1];
+                    if (b) choose(b);
+                } else if (answered && (e.key === "Enter" || e.key === " ") && e.target === document.body) {
+                    e.preventDefault();
+                    nextQuestion();
+                }
             });
 
+            $("introText").textContent = "世界史の重要語" + WORDS.length + "語からランダムに出題します。問題文を読んで、答えを4つから選んでください。";
             renderKeep();
         })();
     </script>
